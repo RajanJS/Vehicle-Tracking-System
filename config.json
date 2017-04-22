@@ -1,0 +1,12 @@
+{
+  "tcp": {
+    "port": 6200,
+    "input_log_encoding": "ascii",
+    "idle_timeout": 60000
+  },
+  "http": {
+    "port": 6201
+  },
+  "logging": {},
+  "socketio": {}
+}
