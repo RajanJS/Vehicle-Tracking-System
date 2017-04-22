@@ -1,5 +1,4 @@
-
-var map = L.map('map').setView([48.60, 31.40], 6);//12);
+var map = L.map('map').setView([27.3172, 85.3040], 10); //12);
 
 var iconCar;
 //iconCar = L.divIcon({className: 'leaflet-div-icon'});
@@ -8,14 +7,14 @@ var iconCar;
 iconCar = L.icon({
 
     //	car marker, @see https://mapicons.mapsmarker.com/markers/transportation/road-transportation/car/
-	//iconUrl: 'car (6).png', // light blue
-	//iconUrl: 'car (1).png',
-	iconUrl: 'image/car.png',
+    //iconUrl: 'car (6).png', // light blue
+    //iconUrl: 'car (1).png',
+    iconUrl: 'image/car.png',
     popupAnchor: [0, -35],
     iconSize: [40, 46],
     iconAnchor: [20, 45]
-	
-	/*
+
+    /*
     //	not marker just a car
 	//iconUrl: 'car211_128x128.png'
     //iconUrl: 'car211_24x24.png'
@@ -27,7 +26,7 @@ iconCar = L.icon({
     popupAnchor: [-2, -8],
     iconAnchor: [24, 24]
 	*/
-	
+
     /*
     @see http://leafletjs.com/reference.html#icon
     iconUrl: 'my-icon.png',
@@ -46,7 +45,7 @@ var mapDevices = [];
 
 var socket = io();
 
-socket.on('map message', function (msg) {
+socket.on('map message', function(msg) {
     console.log("got  msg: " + msg);
     //console.log('got  msg: ' + msg.type + ' text: ' + msg.text + ' lat: ' + msg.lat + ' lng: ' + msg.lng );    
 
@@ -54,11 +53,11 @@ socket.on('map message', function (msg) {
     if (msg.type = 'marker') {
         setMarker( msg );
     }
-    */    
-    
-    var arrByDevice = mapDevices[ msg.deviceId ];
+    */
+
+    var arrByDevice = mapDevices[msg.deviceId];
     if (!arrByDevice) {
-        mapDevices[ msg.deviceId ] = arrByDevice = [];
+        mapDevices[msg.deviceId] = arrByDevice = [];
     } else {
         //  ensure array size
         if (arrByDevice.length >= 5) // 10 - too many
@@ -69,31 +68,31 @@ socket.on('map message', function (msg) {
             //killMsg['objMarker'].removeFrom(map);
             var killMarker = killMsg['objMarker'];
             killMarker.off('click', onMarkerClick);
-            map.removeLayer( killMarker );
+            map.removeLayer(killMarker);
         }
     }
-    arrByDevice.unshift( msg );
-    
+    arrByDevice.unshift(msg);
+
     /*
     //  put markers in reverse order
     for (var i = arrByDevice.length - 1; i >= 1; i--) {
         setMarker( msg, 0.5 );
     }
     */
-    
+
     //  set current marker
-    setMarker( msg );
-    
+    setMarker(msg);
+
     //  fade out previous marker
     if (arrByDevice.length > 1) {
         var updateMarker = arrByDevice[1]['objMarker'];
-        updateMarker.setOpacity( 0.4 );
-		
-		//	special 'disappearing' fading for last marker in the range
-		updateMarker = arrByDevice[ arrByDevice.length - 1 ]['objMarker'];
-        updateMarker.setOpacity( 0.25 );
+        updateMarker.setOpacity(0.4);
+
+        //	special 'disappearing' fading for last marker in the range
+        updateMarker = arrByDevice[arrByDevice.length - 1]['objMarker'];
+        updateMarker.setOpacity(0.25);
     }
-    
+
 });
 
 /**
@@ -116,45 +115,44 @@ socket.on('map message', function (msg) {
  * @param {type} msg
  * @returns {undefined}
  */
-function setMarker( msg, opacity ) 
-{
-    var marker = L.marker( [msg.lat, msg.lng], { icon: iconCar, opacity: (opacity) ? opacity : 1.0 } ).addTo(map);
+function setMarker(msg, opacity) {
+    var marker = L.marker([msg.lat, msg.lng], {
+        icon: iconCar,
+        opacity: (opacity) ? opacity : 1.0
+    }).addTo(map);
     msg['objMarker'] = marker; // keep marker object
-    
+
     var info;
     info = 'Device: ' + msg.deviceId;
-    
+
     info += '<br/>';
-    info += 'Lat: ' + msg.lat; 
+    info += 'Lat: ' + msg.lat;
     info += '<br/>';
     info += 'Lng: ' + msg.lng;
     info += '<br/>';
-    info += 'Altitude: ' + msg.altitude + ' m';
-    
-    info += '<br/>';
-    info += 'Speed: ' + parseFloat( msg.speed ).toFixed( 1 ) + ' km/hr';
-    
+    info += 'Speed: ' + parseFloat(msg.speed).toFixed(1) + ' km/hr';
+
     //info += '<br/>';
     //info += 'Date: ' + msg.utcDate + ' Time: ' + msg.utcTime;
-//    info += '<br/>';
-//    info += 'UTC 1: ' + msg.utcDateTime;
-//    info += '<br/>';
-//    info += 'UTC 2: ' + Date.UTC(msg.utcDateTime);
-    
+    //    info += '<br/>';
+    //    info += 'UTC 1: ' + msg.utcDateTime;
+    //    info += '<br/>';
+    //    info += 'UTC 2: ' + Date.UTC(msg.utcDateTime);
+
     info += '<br/>';
     //info += 'Local: ' + Date.parse(msg.utcDateTime).toLocaleString(); // doesn't work, OUTPUT:   Local: 1 380 485 979 000
     //info += 'Date & time: ' + new Date(msg.utcDateTime).toLocaleString();
-    
+
     //marker.bindPopup( msg.text ).openPopup();
-    marker.bindPopup( info );
-    
+    marker.bindPopup(info);
+
     marker.on('click', onMarkerClick);
 }
 
 function onMarkerClick(e) {
-        //map.setZoom( 13 );
-        //map.setView([msg.lat, msg.lng], 13);
-        map.setView([e.latlng.lat, e.latlng.lng], 13);
+    //map.setZoom( 13 );
+    //map.setView([msg.lat, msg.lng], 13);
+    map.setView([e.latlng.lat, e.latlng.lng], 13);
 }
 
 /*
@@ -178,13 +176,11 @@ function sendMessage(msg) {
  map.addLayer(drawnItems);
  */
 
-$(window).ready(function ()
-{
+$(window).ready(function() {
     do_resize();
 });
 
-function do_resize()
-{
+function do_resize() {
     var $winheight = $(window).height() - 2;
 
     if ($winheight < 10)
@@ -204,20 +200,20 @@ function do_resize()
     $("#meditor").width($winwidth);
     //$("#map").width( $winwidth -500);
     $("#map").height($winheight);
-}
-;
+};
 
 //$(function()  // original line
-$(document).ready(function ()
-{
+$(document).ready(function() {
     do_resize();
-    $(window).bind("resize", function () {
+    $(window).bind("resize", function() {
         do_resize();
     });
 
     var osm, ggr, ggs, ggh, ggt, cad, m100, sat, ynd, yns, ynh, ynp, ynt;
 
-    osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: 'gisfile.com &copy; <a rel="nofollow" href="http://gisfile.com">GISFile</a>'}); //, {continuousWorld: false, worldCopyJump: false, attribution: 'ShelS Web Server &copy; by <a rel="nofollow" href="http://shels.com.ua">ShelS Company</a>'});
+    osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'gisfile.com &copy; <a rel="nofollow" href="http://gisfile.com">GISFile</a>'
+    }); //, {continuousWorld: false, worldCopyJump: false, attribution: 'ShelS Web Server &copy; by <a rel="nofollow" href="http://shels.com.ua">ShelS Company</a>'});
     ggr = new L.Google('ROADMAP');
     ggs = new L.Google('SATELLITE');
     ggh = new L.Google('HYBRID');
@@ -241,8 +237,13 @@ $(document).ready(function ()
         'Yandex Public': ynp
     });
     map.addControl(layers);
-    
-    L.control.mousePosition({emptyString: ''}).addTo(map);
-    L.control.locate({icon: 'fa fa-location-arrow', strings: {}}).addTo(map); // @see https://github.com/domoritz/leaflet-locatecontrol#possible-options
+
+    L.control.mousePosition({
+        emptyString: ''
+    }).addTo(map);
+    L.control.locate({
+        icon: 'fa fa-location-arrow',
+        strings: {}
+    }).addTo(map); // @see https://github.com/domoritz/leaflet-locatecontrol#possible-options
 
 });

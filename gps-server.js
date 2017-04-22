@@ -9,7 +9,7 @@ var events = require('events');
 var log = require('./modules/log')(module);
 var logInput = require('./modules/logInput')(module);
 var config = require('./modules/config');
-// var parser = require('./modules/parsing/parser');
+var parser = require('./modules/parsing/parser');
 
 /**
  * Function to run gps-server outside.
@@ -35,6 +35,14 @@ module.exports = function() {
         socket.on('disconnect', function() {
             console.log('user disconnected');
             log.info('socket.io disconnected');
+        });
+
+        socket.on('map message', function(msg) {
+            //console.log('map message: ' + msg );
+            //console.log('map message: ' + msg.type + ' text: ' + msg.text + ' lat: ' + msg.lat + ' lng: ' + msg.lng );
+            log.info('map message: ' + msg);
+
+            io.emit('map message', msg);
         });
 
     });
@@ -83,8 +91,8 @@ module.exports = function() {
         socket.on('data', function(buffer) {
             log.info('tcp ' + client + '  passed data:\n' + buffer);
             log.info('TCP got data from ' + client);
-            log.info('TCP got data on socket: ' + socket); // TODO: debug socket.IMEI value
-            log.info('TCP got data on socket: ' + JSON.stringify(socket.address()));
+            // log.info('TCP got data on socket: ' + socket); // TODO: debug socket.IMEI value
+            // log.info('TCP got data on socket: ' + JSON.stringify(socket.address()));
 
             try {
                 logInput.info(buffer.toString(tcpInputEncoding)); // saving data input -> into a file.
@@ -93,85 +101,84 @@ module.exports = function() {
             }
 
             ///////////////
-            /*
-                        //  process data packet
-                        var parsedData = parser.parse(socket, buffer); // (buffer instanceof Buffer) == true
-                        log.debug('parsed data:\n' + parsedData); //TODO: stringify parsed results.
 
-                        if (!parsedData) { //	null || undefined
-                            log.error("Data wasn't parsed. Connection dropped.");
-                            socket.destroy(); //  release socket resources
-                            return;
-                        }
+            //  process data packet
+            var parsedData = parser.parse(socket, buffer); // (buffer instanceof Buffer) == true
+            log.debug('parsed data:\n' + parsedData); //TODO: stringify parsed results.
 
-                        var parsedMaps; // expected format - Array of Maps with extracted data values.
-                        if (_.isArray(parsedData)) {
-                            if (parsedData.length == 0) { // empty Array
-                                log.info('Connection still opened, looking for next data packet.');
-                                return;
-                            }
-                            parsedMaps = parsedData;
-                        }
+            if (!parsedData) { //	null || undefined
+                log.error("Data wasn't parsed. Connection dropped.");
+                socket.destroy(); //  release socket resources
+                return;
+            }
 
-                        if (!parsedMaps) {
-                            log.error("Can't process parsed data. Connection dropped.");
-                            socket.destroy();
-                            return; //  TODO:   keep connection opened, as there may be additional data ?
-                        }
+            var parsedMaps; // expected format - Array of Maps with extracted data values.
+            if (_.isArray(parsedData)) {
+                if (parsedData.length == 0) { // empty Array
+                    log.info('Connection still opened, looking for next data packet.');
+                    return;
+                }
+                parsedMaps = parsedData;
+            }
 
-                        //  data packet fully processed.
-                        //  release socket asap.
-                        socket.end();
+            if (!parsedMaps) {
+                log.error("Can't process parsed data. Connection dropped.");
+                socket.destroy();
+                return; //  TODO:   keep connection opened, as there may be additional data ?
+            }
 
-                        try {
-                            //  TODO:   use 'ui:enabled' config option
+            //  data packet fully processed.
+            //  release socket asap.
+            socket.end();
 
-                            //  update UI in real-time
-                            //  TODO:   don't pass EVERY of coords to UI, but only LAST / LATEST one.
-                            for (var index = 0; index < parsedMaps.length; index++) {
-                                var mapData = parsedMaps[index];
-                                var deviceId = mapData['IMEI'];
+            try {
+                //  TODO:   use 'ui:enabled' config option
 
-                                if (deviceId) {
-                                    //  utcDate,utcTime
-                                    var utcDateTime = mapData['utcDateTime'];
-                                    var utcDate = mapData['utcDate'];
-                                    var utcTime = mapData['utcTime'];
-                                    var utcDate = new Date(mapData['utcDate']);
-                                    var utcTime = new Date(mapData['utcTime']);
-                                    var utcDateTime = new Date(parseInt(mapData['utcDate']) + parseInt(mapData['utcTime']));
-                                    log.debug('date: ' + utcDate + ' time: ' + utcTime);
-                                    log.debug('date & time as Date: ' + utcDateTime); // OUTPUT: date & time as Date: 1377818379000
-                                    log.debug('date&time as String: ' + utcDateTime.toString()); // the same !
+                //  update UI in real-time
+                //  TODO:   don't pass EVERY of coords to UI, but only LAST / LATEST one.
+                for (var index = 0; index < parsedMaps.length; index++) {
+                    var mapData = parsedMaps[index];
+                    var deviceId = mapData['IMEI'];
 
-                                    var lat = mapData['latitude'];
-                                    var lng = mapData['longitude'];
+                    if (deviceId) {
+                        //  utcDate,utcTime
+                        var utcDateTime = mapData['utcDateTime'];
+                        var utcDate = mapData['utcDate'];
+                        var utcTime = mapData['utcTime'];
+                        var utcDate = new Date(mapData['utcDate']);
+                        var utcTime = new Date(mapData['utcTime']);
+                        var utcDateTime = new Date(parseInt(mapData['utcDate']) + parseInt(mapData['utcTime']));
+                        log.debug('date: ' + utcDate + ' time: ' + utcTime);
+                        log.debug('date & time as Date: ' + utcDateTime); // OUTPUT: date & time as Date: 1377818379000
+                        log.debug('date&time as String: ' + utcDateTime.toString()); // the same !
 
-                                    var objUI = {
-                                        type: 'marker',
-                                        deviceId: deviceId,
-                                        utcDateTime: new Date(utcDateTime).toUTCString(),
-                                        altitude: mapData['altitude'], // Unit: meter
-                                        speed: mapData['speed'], // unit: km/hr
-                                        //speedKnots: mapData['speedKnots'], // unit: Knots
-                                        heading: mapData['heading'], // unit: degree
-                                        //reportType: mapData['reportType'], - see: tr-600_development_document_v0_7.pdf -> //4=Motion mode static report //5 = Motion mode moving report //I=SOS alarm report //j= ACC report
-                                        lat: lat,
-                                        lng: lng
-                                    };
-                                    io.emit('map message', objUI); // broadcasting using 'emit' to every socket.io client
-                                    log.debug('gps position broadcasted -> map UI');
-                                }
-                            }
-                        } catch (ex) {
-                            log.error('UI update failure: ' + ex);
-                        }
+                        var lat = mapData['latitude'];
+                        var lng = mapData['longitude'];
 
-                        //  announce GPS data events, as part of 'extension point' to be used outside
-                        em.emit('gps_data', parsedMaps);
-                        em.emit('gps_data_tcp', parsedMaps);
+                        var objUI = {
+                            type: 'marker',
+                            deviceId: deviceId,
+                            utcDateTime: new Date(utcDateTime).toUTCString(),
+                            // altitude: mapData['altitude'], // Unit: meter
+                            speed: mapData['speed'], // unit: km/hr
+                            speedKnots: mapData['speedKnots'], // unit: Knots
+                            heading: mapData['direction'], // unit: degree
+                            lat: lat,
+                            lng: lng
+                        };
+                        io.emit('map message', objUI); // broadcasting using 'emit' to every socket.io client
+                        log.debug('gps position broadcasted -> map UI');
+                    }
+                }
+            } catch (ex) {
+                log.error('UI update failure: ' + ex);
+            }
 
-            */
+            //  announce GPS data events, as part of 'extension point' to be used outside
+            em.emit('gps_data', parsedMaps);
+            em.emit('gps_data_tcp', parsedMaps);
+
+
             //////////////
         });
 

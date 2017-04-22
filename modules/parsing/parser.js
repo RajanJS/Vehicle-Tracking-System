@@ -1,14 +1,11 @@
 var _ = require('underscore');
 var log = require('../log')(module);
-var globalsat = require('./protocols/globalsat');
-var teltonika = require('./protocols/teltonika');
+var tk103 = require('./protocols/tk103');
 
 var parser = {};
 module.exports = parser;
 
-//TODO: unify protocols usage, like:  parser.registerProtocol( protocolModule, priority, ... )
-
-var protocols = [globalsat, teltonika]; //TODO: add more protocol modules here
+var protocols = [tk103]; //TODO: add more protocol modules here
 /*
 //  Definition with protocol providers with priorities.
 //  Parser can run every provider.canParse() method,
@@ -34,8 +31,7 @@ var protocols = [
  * @param {Socket} socket - socket connection.
  * @param {Buffer} buffer - raw binary data of Buffer type.
  */
-parser.parse = function (socket, buffer)
-{
+parser.parse = function(socket, buffer) {
     /*
      TODO implement:
      method in every specific parser.canParse( data ) ?
@@ -52,15 +48,14 @@ parser.parse = function (socket, buffer)
     */
 
     var provider;
-    for (var i = 0; i < protocols.length; i++)
-    {
+    for (var i = 0; i < protocols.length; i++) {
         provider = protocols[i];
         log.debug('protocol: ' + i + ' provider: ' + provider);
 
         var supported = -1; // not implemented
         try {
-            supported = provider.canParse( buffer );
-        } catch(ex) {
+            supported = provider.canParse(buffer);
+        } catch (ex) {
             log.error('protocol provider failure: ' + ex);
         }
         log.debug('does provider understand the protocol ? ' + supported);
@@ -78,7 +73,7 @@ parser.parse = function (socket, buffer)
 
     try {
         return provider.parse(socket, buffer);
-    } catch(ex) {
+    } catch (ex) {
         log.error('parsing failure: ' + ex);
     }
 

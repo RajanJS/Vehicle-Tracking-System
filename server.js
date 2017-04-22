@@ -22,7 +22,7 @@ eventEmitter.on('gps_data', function(data) {
 
 eventEmitter.on('gps_data_tcp', function(data) {
 	setImmediate(function(data) {
-		console.log('EVENT async "gps_data_tcp" : ', data);
+		// console.log('EVENT async "gps_data_tcp" : ', data);
 	}, data);
 });
 
