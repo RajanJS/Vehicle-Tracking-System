@@ -1,6 +1,6 @@
 {
   "tcp": {
-    "port": 6200,
+    "port": 8090,
     "input_log_encoding": "ascii",
     "idle_timeout": 60000
   },
