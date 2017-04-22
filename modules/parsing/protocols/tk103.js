@@ -162,16 +162,9 @@ parser.parse = function(socket, data) {
     return arrParsedMaps;
 };
 
-function convert2decimal(strValue, mark) {
-    if (typeof(mark) == "undefined") mark = "N";
-    var dg = parseInt(strValue / 100);
-    var minutes = strValue - (dg * 100);
-    var res = (minutes / 60) + dg;
-    return (mark.toUpperCase() == "S" || mark.toUpperCase() == "W") ? res * -1 : res;
-}
+
 
 function ensureDecimal(strValue, mark) {
-    console.log("############################")
     var res = '';
     try {
         res = convert2decimal(strValue, mark);
@@ -187,40 +180,18 @@ function ensureDecimal(strValue, mark) {
  * @param {type} strValue
  * @returns {String}
  */
-// function convert2decimal(strValue, leadmark) {
-//     console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", strValue)
-//     console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", leadmark)
+function convert2decimal(strValue, mark) {
 
-//     if (_.isEmpty(strValue)) {
-//         throw new Error('Can\'t convert empty string into decimal coords value.');
-//     }
+    if (_.isEmpty(strValue)) {
+        throw new Error('Can\'t convert empty string into decimal coords value.');
+    }
 
-//     var res;
-//     res = parseFloat(strValue);
-
-//     res = Math.round(res / 100) + ((res / 100) - Math.round(res / 100)) / 0.6;
-//     console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", res)
-
-//     switch (leadMark) {
-//         case 'E':
-//         case 'N':
-//             //  as is
-//             console.log(">>>>>>>>>>>>>>>>>>>>>>>>>as it is>>>>>>>>>>>>>", res)
-//             break;
-
-//         case 'W':
-//         case 'S':
-//             res = -res;
-//             break;
-
-//         default:
-//             throw new Error('String must be starting with either of: "E", "W", "N", "S".');
-//     }
-
-//     console.log(">>>>>>>>>>>>>>>>>>>", res);
-
-//     return res.toString();
-// };
+    if (typeof(mark) == "undefined") mark = "N";
+    var dg = parseInt(strValue / 100);
+    var minutes = strValue - (dg * 100);
+    var res = (minutes / 60) + dg;
+    return (mark.toUpperCase() == "S" || mark.toUpperCase() == "W") ? res * -1 : res;
+};
 
 function ensureUtc(strDate, strTime) {
     //  formatter = new SimpleDateFormat("ddMMyy");
